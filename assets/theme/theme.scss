@@ -1,0 +1,12 @@
+@import "~vue-material/dist/theme/engine";
+
+@include md-register-theme('default', (
+  primary: #C82027,
+  accent: #051B3B
+));
+
+@import "~vue-material/dist/theme/all";
+
+// Colors
+// #C82027 Red
+// #051B3B Blue
