@@ -29,14 +29,15 @@
             </md-field>
             <md-field :class="getValidationClass('emailAddress')">
               <label for="email">Email</label>
-              <md-input v-model="email.emailAddress" type="email" name="email" id="email"></md-input>
+              <md-input v-model="email.emailAddress" name="email" id="email"></md-input>
               <span class="md-error" v-if="!$v.email.emailAddress.required">The email is required!</span>
-              <span class="md-error" v-if="!$v.email.emailAddress">The email is invalid!</span>
+              <span class="md-error" v-if="!$v.email.emailAddress.email">The email is invalid! Must include @example.com!</span>
             </md-field>
             <md-field :class="getValidationClass('phone')">
               <label for="phone">Phone</label>
               <md-input v-model="email.phone" type="tel" name="phone" id="phone"></md-input>
               <span class="md-error" v-if="!$v.email.phone.required">The phone number is required!</span>
+              <span class="md-error" v-else-if="!$v.email.phone.validatePhone">The phone number must formated XXX-XXX-XXXX!</span>
             </md-field>
             <md-field :class="getValidationClass('message')">
               <label for="message">Message</label>
@@ -84,8 +85,10 @@
         :md-active.sync="showSnackbar"
         md-persistent
       >
-        <h1>{{ confirmMessage }}</h1>
-        <md-button class="md-primary" @click="showSnackbar = false">Ok</md-button>
+        <p class="snack-p">{{ confirmMessage }}</p>
+        <md-button class="md-icon-button snack-icon" @click="showSnackbar = false">
+          <md-icon><i class="fas fa-times snack-icon"></i></md-icon>
+        </md-button>
       </md-snackbar>
     </main>
 
@@ -107,15 +110,22 @@ import {
 import Navbar from "~/components/Navbar.vue";
 import Footer from "~/components/Footer.vue";
 
+const regex = /^\d{3}-\d{3}-\d{4}$/
+const validatePhone = value => regex.test(value)
+
 export default {
   name: "Contact",
+  components: {
+    Navbar,
+    Footer
+  },
   mixins: [validationMixin],
   data: () => ({
     error: true,
     showSnackbar: false,
     position: "left",
     duration: 4000,
-    isInfinity: false,
+    isInfinity: true,
     email: {
       name: "",
       emailAddress: "",
@@ -135,27 +145,22 @@ export default {
       },
       phone: {
         required,
-        minLength: minLength(9),
-        numeric
+        validatePhone
       },
       message: {
         required
       }
     }
   },
-  components: {
-    Navbar,
-    Footer
-  },
   methods: {
     sendEmail() {
       this.$axios
         .$post("/email/send", this.email)
-        .then(response => {
-          this.confirmMessage = response;
-          this.showSnackbar = true;
+        .then((response) => {
+          console.log(response)
+          typeof response === 'object' ? this.confirmMessage = response.message : this.confirmMessage = response
+          this.showSnackbar = true
         })
-        .catch(err => console.log(err));
     },
     validateForm() {
       this.$v.$touch();
@@ -176,6 +181,14 @@ export default {
 <style lang="scss" scoped>
 $primary-color: #c82027;
 $accent-color: #051b3b;
+
+.snack-p {
+  font-size: 1.2rem;
+}
+
+.snack-icon {
+  color: #fff;
+}
 
 .bg-image {
   background: url("../../assets/img/contact.jpg");

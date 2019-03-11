@@ -39,34 +39,57 @@
 
       <div class="form-content">
         <div class="motto">
-          <h1 class="txt-center title">Improving Our Community, One Property At A Time</h1>
           <div class="logo">
             <img src="~/assets/img/ph-logo.png" alt>
           </div>
         </div>
 
-        <form>
-          <h2 class="txt-center">Contact Us Today</h2>
+        <form @submit.prevent="validateForm">
+          <h2 class="tc">Contact Us Today</h2>
 
-          <md-field>
-            <label>Name</label>
-            <md-input type="text"></md-input>
-          </md-field>
-          <md-field>
-            <label>Email</label>
-            <md-input type="email"></md-input>
-          </md-field>
-          <md-field>
-            <label>Phone</label>
-            <md-input type="tel"></md-input>
-          </md-field>
-          <md-field>
-            <label>Message</label>
-            <md-textarea type="text" md-autogrow></md-textarea>
-          </md-field>
-          <md-button class="md-raised md-primary">send</md-button>
+          <md-field :class="getValidationClass('name')">
+              <label for="name">Name</label>
+              <md-input v-model="email.name" type="text" name="name" id="name"></md-input>
+              <span class="md-error" v-if="!$v.email.name.required">The name is required!</span>
+            </md-field>
+            <md-field :class="getValidationClass('emailAddress')">
+              <label for="email">Email</label>
+              <md-input v-model="email.emailAddress" name="email" id="email"></md-input>
+              <span class="md-error" v-if="!$v.email.emailAddress.required">The email is required!</span>
+              <span class="md-error" v-if="!$v.email.emailAddress.email">The email is invalid! Must include @example.com!</span>
+            </md-field>
+            <md-field :class="getValidationClass('phone')">
+              <label for="phone">Phone</label>
+              <md-input v-model="email.phone" type="tel" name="phone" id="phone"></md-input>
+              <span class="md-error" v-if="!$v.email.phone.required">The phone number is required!</span>
+              <span class="md-error" v-else-if="!$v.email.phone.validatePhone">The phone number must formated XXX-XXX-XXXX!</span>
+            </md-field>
+            <md-field :class="getValidationClass('message')">
+              <label for="message">Message</label>
+              <md-textarea
+                v-model="email.message"
+                type="text"
+                name="message"
+                id="message"
+                md-autogrow
+              ></md-textarea>
+              <span class="md-error" v-if="!$v.email.message.required">This field is required!</span>
+            </md-field>
+          <md-button class="md-raised md-primary" type="submit">send</md-button>
         </form>
       </div>
+
+      <md-snackbar
+        :md-position="position"
+        :md-duration="isInfinity ? Infinity : duration"
+        :md-active.sync="showSnackbar"
+        md-persistent
+      >
+        <p class="snack-p">{{ confirmMessage }}</p>
+        <md-button class="md-icon-button snack-icon" @click="showSnackbar = false">
+          <md-icon><i class="fas fa-times snack-icon"></i></md-icon>
+        </md-button>
+      </md-snackbar>
     </main>
 
     <Footer/>
@@ -74,15 +97,81 @@
 </template>
 
 <script>
+import { validationMixin } from "vuelidate";
+import {
+  required,
+  email,
+  minLength,
+  maxLength,
+  alpha,
+  numeric,
+} from "vuelidate/lib/validators";
 import Navbar from "~/components/Navbar.vue";
 import Footer from "~/components/Footer.vue";
 
+const regex = /^\d{3}-\d{3}-\d{4}$/
+const validatePhone = value => regex.test(value)
+
 export default {
   name: "home",
-  sending: false,
   components: {
     Navbar,
     Footer
+  },
+  mixins: [validationMixin],
+  data: () => ({
+    error: true,
+    showSnackbar: false,
+    position: "left",
+    isInfinity: true,
+    email: {
+      name: "",
+      emailAddress: "",
+      phone: "",
+      message: ""
+    },
+    confirmMessage: ""
+  }),
+  validations: {
+    email: {
+      name: {
+        required
+      },
+      emailAddress: {
+        required,
+        email
+      },
+      phone: {
+        required,
+        validatePhone
+      },
+      message: {
+        required
+      }
+    }
+  },
+  methods: {
+    sendEmail() {
+      this.$axios
+        .$post("/email/send", this.email)
+        .then((response) => {
+          console.log(response)
+          typeof response === 'object' ? this.confirmMessage = response.message : this.confirmMessage = response
+          this.showSnackbar = true
+        })
+    },
+    validateForm() {
+      this.$v.$touch();
+      if (!this.$v.$invalid) this.sendEmail();
+    },
+    getValidationClass(fieldName) {
+      const field = this.$v.email[fieldName];
+      if (field) {
+        return {
+          "md-invalid": field.$invalid && field.$dirty
+        };
+      }
+    }
   }
 };
 </script>
@@ -91,15 +180,16 @@ export default {
 $primary-color: #c82027;
 $accent-color: #051b3b;
 
-.bg-image {
-  background: url("../assets/img/home-header-4.jpg");
+.snack-p {
+  font-size: 1.2rem;
 }
 
-.title {
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  color: $accent-color;
-  line-height: 1.2;
+.snack-icon {
+  color: #fff;
+}
+
+.bg-image {
+  background: url("../assets/img/home-header-4.jpg");
 }
 
 .logo {
@@ -111,22 +201,17 @@ $accent-color: #051b3b;
 .apart {
   display: flex;
   justify-content: space-around;
+  align-items: center; 
 
   & .pitch {
     & h2 {
-      font-size: 1.7rem;
       color: $primary-color;
+      margin-bottom: 20px;
     }
 
     & p {
-      font-size: 1.2rem;
       line-height: 1.4;
     }
-  }
-
-  & img {
-    width: 500px;
-    height: 400px;
   }
 }
 
@@ -136,7 +221,7 @@ $accent-color: #051b3b;
 
 .apart {
   flex-direction: row-reverse;
-  background: #eee;
+  background: #f1f1f1;
   padding: 100px 0px;
   margin-bottom: 70px;
 }
@@ -147,13 +232,7 @@ $accent-color: #051b3b;
   margin-bottom: 100px;
 }
 
-.motto {
-  max-width: 600px;
-}
-
 form {
-  width: 500px;
-
   & h2 {
     font-size: 1.5rem;
     color: $accent-color;
@@ -165,13 +244,78 @@ form {
   }
 }
 
-@media only screen and (min-width: 900px) {
+// Media Queries
+@media only screen and (min-width: 1130px) {
   .pitch {
     width: 500px;
+    & h2 {
+      font-size: 1.7rem;
+    }
+
+    & p {
+      font-size: 1.2rem;
+      line-height: 1.4;
+    }
+  }
+
+  form {
+    width: 500px;
+  }
+
+  .motto {
+    max-width: 600px;
   }
 }
 
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 1130px) {
+  .pitch {
+    width: 450px;
+    & h2 {
+      font-size: 1.5rem;
+    }
+
+    & p {
+      font-size: 1.1rem;
+    }
+
+    & img {
+      width: 500px;
+      height: 400px;
+    }
+  }
+
+  form {
+    width: 400px;
+  }
+
+  .motto {
+    width: 400px;
+  }
+}
+
+@media only screen and (min-width: 1050px) {
+  .apart, 
+  .everyone {
+    & img {
+      width: 500px;
+      height: 400px;
+    }
+  }
+}
+
+@media only screen and (max-width: 1050px) {
+  .apart,
+  .everyone {
+    & img {
+      width: 450px;
+      height: 350px;
+    }
+  }
+
+
+}
+
+@media only screen and (max-width: 990px) {
   .everyone,
   .apart {
     flex-direction: column;
@@ -180,21 +324,20 @@ form {
       text-align: center;
       padding: 20px;
       margin: auto auto 30px auto;
+      width: 80%;
 
       & h2 {
-        font-size: 1.5rem;
         line-height: 1.5;
-        color: $accent-color;
       }
 
       & p {
-        font-size: 1rem;
+        font-size: 1.1rem;
         line-height: 2;
       }
     }
 
     & img {
-      width: 100%;
+      width: 80%;
     }
   }
 
@@ -211,6 +354,36 @@ form {
     padding: 20px;
 
     & .motto {
+      margin: -70px auto auto auto;
+      width: 80%;
+
+      & h1 {
+        line-height: 1.5;
+      }
+    }
+
+    & form {
+      width: 80%;
+      margin: 0 auto;
+    }
+  }
+}
+
+@media only screen and (max-width: 700px) {
+  .apart,
+  .everyone {
+
+    & .pitch {
+      width: 90%;
+    }
+
+    & img {
+      width: 90%;
+    }
+  }
+
+  .form-content {
+    & .motto {
       margin: 0 auto;
 
       & h1 {
@@ -219,7 +392,8 @@ form {
     }
 
     & form {
-      width: 100%;
+      width: 90%;
+      margin: 0 auto;
     }
   }
 }
