@@ -102,8 +102,7 @@ import {
   email,
   minLength,
   maxLength,
-  alpha,
-  numeric,
+  alpha
 } from "vuelidate/lib/validators";
 import Navbar from "~/components/Navbar.vue";
 import Footer from "~/components/Footer.vue";

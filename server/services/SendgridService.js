@@ -27,7 +27,7 @@ const sendEmail = (email, res) => {
   if (validation.error) {
     res.send('Invalid input')
   } else {
-    sgMail.send(msg).then(() => res.send('Message Sent')).catch((error) => res.send(error))
+    sgMail.send(msg).then(() => res.send('Message Sent')).catch(error => res.send(error))
   }
 }
 
