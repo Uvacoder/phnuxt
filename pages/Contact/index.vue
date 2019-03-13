@@ -153,18 +153,26 @@ export default {
     }
   },
   methods: {
+    clearForm() {
+      this.email.name = ''
+      this.email.emailAddress = ''
+      this.email.phone = ''
+      this.email.message = ''
+    },
     sendEmail() {
       this.$axios
         .$post("/email/send", this.email)
         .then((response) => {
-          console.log(response)
-          typeof response === 'object' ? this.confirmMessage = response.message : this.confirmMessage = response
+          response.message ? this.confirmMessage = response.message : this.confirmMessage = response
           this.showSnackbar = true
         })
     },
     validateForm() {
       this.$v.$touch();
-      if (!this.$v.$invalid) this.sendEmail();
+      if (!this.$v.$invalid) {
+        this.sendEmail();
+        this.clearForm();
+      }
     },
     getValidationClass(fieldName) {
       const field = this.$v.email[fieldName];

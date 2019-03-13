@@ -162,6 +162,7 @@ $accent-color: #051b3b;
 
     & .sell-pitch {
       width: 80%;
+      margin-bottom: 50px;
 
       & h2 {
         line-height: 1.5;

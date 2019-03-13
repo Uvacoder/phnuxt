@@ -75,9 +75,20 @@ footer {
 }
 
 .contact-footer {
+  line-height: 1.2;
+
   & h2 {
     font-size: 1.7rem;
     margin-bottom: 10px;
+  }
+
+  & h3, p {
+    margin-bottom: 15px;
+    line-height: 1.2;
+  }
+
+  & h3 {
+    line-height: 1.2;
   }
 
   & .socials {
@@ -99,6 +110,7 @@ footer {
   & h2 {
     font-size: 1.7rem;
     line-height: 1.2;
+    margin-bottom: 10px;
   }
 
   & p {
@@ -113,12 +125,29 @@ footer {
   }
 }
 
-@media only screen and (max-width: 820px) {
+@media only screen and (max-width: 1100px) {
+  .greeting {
+    width: 450px;
+  }
+}
+
+@media only screen and (max-width: 990px) {
+  .contact-footer {
+    width: 400px;
+  }
+}
+
+@media only screen and (max-width: 910px) {
   .container {
     flex-direction: column;
 
     & .contact-footer {
       margin-bottom: 40px;
+      width: 95%;
+    }
+
+    .greeting {
+      width: 95%;
     }
   }
 }

@@ -83,7 +83,6 @@
         :md-position="position"
         :md-duration="isInfinity ? Infinity : duration"
         :md-active.sync="showSnackbar"
-        md-persistent
       >
         <p class="snack-p">{{ confirmMessage }}</p>
         <md-button class="md-icon-button snack-icon" @click="showSnackbar = false">
@@ -158,11 +157,16 @@ export default {
           console.log(response)
           typeof response === 'object' ? this.confirmMessage = response.message : this.confirmMessage = response
           this.showSnackbar = true
+          this.email.name = ''
+          this.email.emailAddress = ''
+          this.email.phone = ''
+          this.email.message = ''
         })
     },
     validateForm() {
       this.$v.$touch();
       if (!this.$v.$invalid) this.sendEmail();
+
     },
     getValidationClass(fieldName) {
       const field = this.$v.email[fieldName];
